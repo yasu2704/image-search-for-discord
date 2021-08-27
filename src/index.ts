@@ -1,8 +1,9 @@
 import DotEnv from 'dotenv'
-import { Client, Collection, Intents, TextChannel } from 'discord.js'
+import { Client, Collection, Intents } from 'discord.js'
 import type { CommandInteraction } from 'discord.js'
 import type { SlashCommandBuilder } from '@discordjs/builders'
 import Ping from './commands/ping'
+import ImageSearch from './commands/imageSearch'
 
 DotEnv.config()
 
@@ -13,23 +14,25 @@ if (token === '') {
     process.exit(1)
 }
 
-const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] })
+const client = new Client({
+    intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES],
+})
 
 const commands = new Collection<
     string,
     {
-        data: SlashCommandBuilder
+        data: Omit<SlashCommandBuilder, 'addSubcommand' | 'addSubcommandGroup'>
         execute(interaction: CommandInteraction): Promise<void>
     }
 >()
 commands.set(Ping.data.name, Ping)
+commands.set(ImageSearch.data.name, ImageSearch)
 
 client.once('ready', () => {
     console.log('Ready!')
 })
 
 client.on('interactionCreate', async (interaction) => {
-    console.log(`${interaction.user.tag} in #${(interaction.channel as TextChannel).name} triggered an interaction.`)
     if (!interaction.isCommand()) return
 
     const command = commands.get(interaction.commandName)
