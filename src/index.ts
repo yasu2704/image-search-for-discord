@@ -1,5 +1,8 @@
 import DotEnv from 'dotenv'
-import { Client, Intents } from 'discord.js'
+import { Client, Collection, Intents, TextChannel } from 'discord.js'
+import type { CommandInteraction } from 'discord.js'
+import type { SlashCommandBuilder } from '@discordjs/builders'
+import Ping from './commands/ping'
 
 DotEnv.config()
 
@@ -10,29 +13,38 @@ if (token === '') {
     process.exit(1)
 }
 
-const client = new Client({ intents: [Intents.FLAGS.GUILDS] })
+const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] })
+
+const commands = new Collection<
+    string,
+    {
+        data: SlashCommandBuilder
+        execute(interaction: CommandInteraction): Promise<void>
+    }
+>()
+commands.set(Ping.data.name, Ping)
 
 client.once('ready', () => {
     console.log('Ready!')
 })
 
-client.on('interactionCreate', async interaction => {
+client.on('interactionCreate', async (interaction) => {
+    console.log(`${interaction.user.tag} in #${(interaction.channel as TextChannel).name} triggered an interaction.`)
     if (!interaction.isCommand()) return
 
-    const {commandName} = interaction
+    const command = commands.get(interaction.commandName)
 
-    switch (commandName) {
-        case 'ping':
-            await interaction.reply('Pong!')
-            break
-        case 'server':
-            await interaction.reply(`Server name: ${interaction.guild?.name}\nTotal members: ${interaction.guild?.memberCount}`)
-            break
-        case 'user':
-            await interaction.reply(`Your tag: ${interaction.user.tag}\nYour id: ${interaction.user.id}`)
-            break
+    if (!command) return
+
+    try {
+        await command.execute(interaction)
+    } catch (error) {
+        console.error(error)
+        await interaction.reply({
+            content: 'There was an error while executing this command!',
+            ephemeral: true,
+        })
     }
 })
 
 client.login(process.env.TOKEN)
-
