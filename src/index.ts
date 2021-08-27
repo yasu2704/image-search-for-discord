@@ -3,6 +3,13 @@ import { Client, Intents } from 'discord.js'
 
 DotEnv.config()
 
+const token = process.env.TOKEN ?? ''
+
+if (token === '') {
+    console.error('TOKEN is empty!')
+    process.exit(1)
+}
+
 const client = new Client({ intents: [Intents.FLAGS.GUILDS] })
 
 client.once('ready', () => {
