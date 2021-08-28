@@ -2,7 +2,6 @@ import DotEnv from 'dotenv'
 import { Client, Collection, Intents } from 'discord.js'
 import type { CommandInteraction } from 'discord.js'
 import type { SlashCommandBuilder } from '@discordjs/builders'
-import Ping from './commands/ping'
 import ImageSearch from './commands/imageSearch'
 
 DotEnv.config()
@@ -25,7 +24,6 @@ const commands = new Collection<
         execute(interaction: CommandInteraction): Promise<void>
     }
 >()
-commands.set(Ping.data.name, Ping)
 commands.set(ImageSearch.data.name, ImageSearch)
 
 client.once('ready', () => {
