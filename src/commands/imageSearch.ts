@@ -21,9 +21,13 @@ export default {
     const images = await giClient.search(
       `${interaction.options.getString('query')}`
     )
-    const embed = new MessageEmbed()
-      .setTitle(`${interaction.options.getString('query')}`)
-      .setImage(`${images[0].url}`)
-    await interaction.reply({ embeds: [embed] })
+    if (images.length > 0) {
+      const embed = new MessageEmbed()
+        .setTitle(`${interaction.options.getString('query')}`)
+        .setImage(`${images[0].url}`)
+      await interaction.reply({ embeds: [embed] })
+    } else {
+      await interaction.reply('APIの使用回数の上限に達したようです')
+    }
   },
 }
