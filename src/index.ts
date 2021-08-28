@@ -14,7 +14,7 @@ if (token === '') {
 }
 
 const client = new Client({
-  intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES],
+  intents: [Intents.FLAGS.GUILDS],
 })
 
 const commands = new Collection<
@@ -48,4 +48,4 @@ client.on('interactionCreate', async (interaction) => {
   }
 })
 
-client.login(process.env.TOKEN)
+client.login(token)
