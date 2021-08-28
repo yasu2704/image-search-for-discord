@@ -13,4 +13,4 @@ COPY --from=build /app/yarn.lock /app/yarn.lock
 
 RUN yarn install --frozen-lockfile --prod
 
-ENTRYPOINT node /app/dist/index.js
+CMD ["yarn", "start"]
