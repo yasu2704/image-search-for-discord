@@ -11,22 +11,19 @@ const googleApiKey = process.env.GOOGLE_API_KEY ?? ''
 const giClient = new GoogleImages(googleCseId, googleApiKey)
 
 export default {
-    data: new SlashCommandBuilder()
-        .setName('i')
-        .setDescription('Replies with Image!')
-        .addStringOption((option) =>
-            option
-                .setName('query')
-                .setDescription('search keyword')
-                .setRequired(true)
-        ),
-    async execute(interaction: CommandInteraction): Promise<void> {
-        const images = await giClient.search(
-            `${interaction.options.getString('query')}`
-        )
-        const embed = new MessageEmbed()
-            .setTitle(`${interaction.options.getString('query')}`)
-            .setImage(`${images[0].url}`)
-        await interaction.reply({ embeds: [embed] })
-    },
+  data: new SlashCommandBuilder()
+    .setName('i')
+    .setDescription('Replies with Image!')
+    .addStringOption((option) =>
+      option.setName('query').setDescription('search keyword').setRequired(true)
+    ),
+  async execute(interaction: CommandInteraction): Promise<void> {
+    const images = await giClient.search(
+      `${interaction.options.getString('query')}`
+    )
+    const embed = new MessageEmbed()
+      .setTitle(`${interaction.options.getString('query')}`)
+      .setImage(`${images[0].url}`)
+    await interaction.reply({ embeds: [embed] })
+  },
 }
