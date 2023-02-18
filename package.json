@@ -10,7 +10,9 @@
     "lint": "eslint --ext .ts --ignore-path .eslintignore .",
     "lint:fix": "yarn lint --quiet --fix",
     "format": "prettier --check \"**/*.ts\"",
-    "format:fix": "prettier --write \"**/*.ts\""
+    "format:fix": "prettier --write \"**/*.ts\"",
+    "container:start": "docker run --name image-search-for-discord -dit --env-file .env yasu2704/image-search-for-discord",
+    "container:build": "docker build -t yasu2704/image-search-for-discord ."
   },
   "keywords": [],
   "author": "",
