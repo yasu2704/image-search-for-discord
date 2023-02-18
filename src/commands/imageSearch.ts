@@ -1,7 +1,9 @@
 import DotEnv from 'dotenv'
-import { SlashCommandBuilder } from '@discordjs/builders'
-import type { CommandInteraction } from 'discord.js'
-import { MessageEmbed } from 'discord.js'
+import {
+  SlashCommandBuilder,
+  EmbedBuilder,
+  ChatInputCommandInteraction,
+} from 'discord.js'
 import GoogleImages from 'google-images'
 
 DotEnv.config()
@@ -17,12 +19,12 @@ export default {
     .addStringOption((option) =>
       option.setName('query').setDescription('search keyword').setRequired(true)
     ),
-  async execute(interaction: CommandInteraction): Promise<void> {
+  async execute(interaction: ChatInputCommandInteraction): Promise<void> {
     const images = await giClient.search(
       `${interaction.options.getString('query')}`
     )
     if (images.length > 0) {
-      const embed = new MessageEmbed()
+      const embed = new EmbedBuilder()
         .setTitle(`${interaction.options.getString('query')}`)
         .setImage(`${images[0].url}`)
       await interaction.reply({ embeds: [embed] })

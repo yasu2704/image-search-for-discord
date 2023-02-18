@@ -1,22 +1,21 @@
 import DotEnv from 'dotenv'
-import { REST } from '@discordjs/rest'
-import { Routes } from 'discord-api-types/v9'
+import { Routes, REST } from 'discord.js'
 import ImageSearch from './commands/imageSearch'
 
 DotEnv.config()
 
 const token = process.env.TOKEN ?? ''
 const clientId = process.env.CLIENT_ID ?? ''
-const guildId = process.env.GUILD_ID ?? ''
+// const guildId = process.env.GUILD_ID ?? ''
 
 const commands: unknown[] = []
 commands.push(ImageSearch.data.toJSON())
 
-const rest = new REST({ version: '9' }).setToken(token)
+const rest = new REST({ version: '10' }).setToken(token)
 
 ;(async () => {
   try {
-    await rest.put(Routes.applicationGuildCommands(clientId, guildId), {
+    await rest.put(Routes.applicationCommands(clientId), {
       body: commands,
     })
 

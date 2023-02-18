@@ -1,7 +1,6 @@
 import DotEnv from 'dotenv'
-import { Client, Collection, Intents } from 'discord.js'
-import type { CommandInteraction } from 'discord.js'
-import type { SlashCommandBuilder } from '@discordjs/builders'
+import { Client, Collection, GatewayIntentBits } from 'discord.js'
+import type { CommandInteraction, SlashCommandBuilder } from 'discord.js'
 import ImageSearch from './commands/imageSearch'
 
 DotEnv.config()
@@ -14,7 +13,7 @@ if (token === '') {
 }
 
 const client = new Client({
-  intents: [Intents.FLAGS.GUILDS],
+  intents: [GatewayIntentBits.Guilds],
 })
 
 const commands = new Collection<
