@@ -1,6 +1,12 @@
 import DotEnv from 'dotenv'
-import { Client, Collection, GatewayIntentBits } from 'discord.js'
-import type { CommandInteraction, SlashCommandBuilder } from 'discord.js'
+import {
+  CacheType,
+  ChatInputCommandInteraction,
+  Client,
+  Collection,
+  Events,
+  GatewayIntentBits,
+} from 'discord.js'
 import ImageSearch from './commands/imageSearch'
 
 DotEnv.config()
@@ -16,28 +22,23 @@ const client = new Client({
   intents: [GatewayIntentBits.Guilds],
 })
 
-const commands = new Collection<
-  string,
-  {
-    data: Omit<SlashCommandBuilder, 'addSubcommand' | 'addSubcommandGroup'>
-    execute(interaction: CommandInteraction): Promise<void>
-  }
->()
-commands.set(ImageSearch.data.name, ImageSearch)
+client.commands = new Collection()
+
+client.commands.set(ImageSearch.data.name, ImageSearch)
 
 client.once('ready', () => {
   console.log('Ready!')
 })
 
-client.on('interactionCreate', async (interaction) => {
-  if (!interaction.isCommand()) return
+client.on(Events.InteractionCreate, async (interaction) => {
+  if (!interaction.isChatInputCommand()) return
 
-  const command = commands.get(interaction.commandName)
+  const command = interaction.client.commands.get(interaction.commandName)
 
   if (!command) return
 
   try {
-    await command.execute(interaction)
+    await command.execute(interaction as ChatInputCommandInteraction<CacheType>)
   } catch (error) {
     console.error(error)
     await interaction.reply({

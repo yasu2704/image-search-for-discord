@@ -3,6 +3,7 @@ import {
   SlashCommandBuilder,
   EmbedBuilder,
   ChatInputCommandInteraction,
+  CacheType,
 } from 'discord.js'
 import GoogleImages from 'google-images'
 
@@ -19,7 +20,9 @@ export default {
     .addStringOption((option) =>
       option.setName('query').setDescription('search keyword').setRequired(true)
     ),
-  async execute(interaction: ChatInputCommandInteraction): Promise<void> {
+  async execute(
+    interaction: ChatInputCommandInteraction<CacheType>
+  ): Promise<void> {
     const images = await giClient.search(
       `${interaction.options.getString('query')}`
     )
