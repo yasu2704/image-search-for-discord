@@ -8,6 +8,7 @@ import {
   GatewayIntentBits,
 } from 'discord.js'
 import ImageSearch from './commands/imageSearch'
+import ChatGpt from './commands/chatGpt'
 
 DotEnv.config()
 
@@ -25,8 +26,11 @@ const client = new Client({
 client.commands = new Collection()
 
 client.commands.set(ImageSearch.data.name, ImageSearch)
+client.commands.set(ChatGpt.data.name, ChatGpt)
 
 client.once('ready', () => {
+  const bot_invite_url = `https://discord.com/api/oauth2/authorize?client_id=${process.env.CLIENT_ID}&permissions=328565073920&scope=bot`
+  console.log(`Invite URL: ${bot_invite_url}`)
   console.log('Ready!')
 })
 

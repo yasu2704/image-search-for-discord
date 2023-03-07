@@ -1,6 +1,7 @@
 import DotEnv from 'dotenv'
 import { Routes, REST } from 'discord.js'
 import ImageSearch from './commands/imageSearch'
+import ChatGpt from './commands/chatGpt'
 
 DotEnv.config()
 
@@ -10,6 +11,7 @@ const clientId = process.env.CLIENT_ID ?? ''
 
 const commands: unknown[] = []
 commands.push(ImageSearch.data.toJSON())
+commands.push(ChatGpt.data.toJSON())
 
 const rest = new REST({ version: '10' }).setToken(token)
 

@@ -4,9 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "ts-node build.ts",
+    "build": "node -r esbuild-register build.ts",
     "start": "node dist/index.js",
     "type-check": "tsc --noEmit",
+    "dev": "node -r esbuild-register src/index.ts",
     "lint": "eslint --ext .ts --ignore-path .eslintignore .",
     "lint:fix": "yarn lint --quiet --fix",
     "format": "prettier --check \"**/*.ts\"",
@@ -20,7 +21,8 @@
   "dependencies": {
     "discord.js": "^14.7.0",
     "dotenv": "^10.0.0",
-    "google-images": "^2.1.0"
+    "google-images": "^2.1.0",
+    "openai": "^3.2.1"
   },
   "devDependencies": {
     "@types/google-images": "^2.1.1",
@@ -29,10 +31,10 @@
     "@typescript-eslint/parser": "^4.29.3",
     "esbuild": "^0.12.24",
     "esbuild-node-externals": "^1.3.0",
+    "esbuild-register": "^3.4.2",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
     "prettier": "^2.3.2",
-    "ts-node": "^10.2.1",
     "typescript": "^4.3.5"
   }
 }
