@@ -1,7 +1,7 @@
 import DotEnv from 'dotenv'
 import { Routes, REST } from 'discord.js'
 import ImageSearch from './commands/imageSearch'
-import ChatGpt from './commands/chatGpt'
+import ChatGpt from './commands/gpt'
 
 DotEnv.config()
 

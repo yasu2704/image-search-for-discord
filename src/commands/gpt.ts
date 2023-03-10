@@ -1,19 +1,14 @@
 import {
   CacheType,
   ChatInputCommandInteraction,
-  Colors,
-  EmbedBuilder,
   SlashCommandBuilder,
 } from 'discord.js'
-import { Configuration, OpenAIApi } from 'openai'
+import { ChatCompletionRequestMessage } from 'openai'
+import { chatGpt } from '../util/chatGpt'
+import { sendEmbed } from '../util/embed'
 import DotEnv from 'dotenv'
 
 DotEnv.config()
-
-const configuration = new Configuration({
-  apiKey: process.env.OPENAI_API_KEY,
-})
-const openai = new OpenAIApi(configuration)
 
 export default {
   data: new SlashCommandBuilder()
@@ -27,16 +22,18 @@ export default {
     ),
   async execute(
     interaction: ChatInputCommandInteraction<CacheType>
-  ): Promise<void> {
+  ): Promise<
+    { threadId: string; messages: ChatCompletionRequestMessage[] } | undefined
+  > {
+    if (interaction.channel?.isThread()) return undefined
+
     const message = interaction.options.getString('message')
-    const embed = new EmbedBuilder()
-      .setDescription(`<@${interaction.user.id}> が会話を開始しました。`)
-      .setColor(Colors.Green)
-      .addFields({
-        name: `${interaction.user.username}`,
-        value: `${message}`,
-      })
-    await interaction.reply({ embeds: [embed] })
+    if (!message) return undefined
+
+    // send embed
+    await sendEmbed({ interaction, message })
+
+    // create thread
     const response = await interaction.fetchReply()
     const thread = await response.startThread({
       name: `${interaction.user.username} - ${message?.substring(0, 30)}`,
@@ -44,17 +41,33 @@ export default {
       autoArchiveDuration: 60,
       rateLimitPerUser: 1,
     })
-    const completion = await openai.createChatCompletion({
-      model: 'gpt-3.5-turbo',
+
+    await thread.sendTyping()
+
+    const completionResponse = await chatGpt({
       messages: [
         {
           role: 'user',
-          content: `${interaction.options.getString('message')}`,
+          content: `${message}`,
         },
       ],
     })
+
+    if (!completionResponse) return undefined
+    // send completion response
     await thread.send({
-      content: `${completion.data.choices[0].message?.content}`,
+      content: `${completionResponse.content}`,
     })
+
+    return {
+      threadId: thread.id,
+      messages: [
+        {
+          role: 'user',
+          content: `${message}`,
+        },
+        completionResponse,
+      ],
+    }
   },
 }
