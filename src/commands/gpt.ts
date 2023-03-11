@@ -3,10 +3,15 @@ import {
   ChatInputCommandInteraction,
   SlashCommandBuilder,
 } from 'discord.js'
-import { ChatCompletionRequestMessage } from 'openai'
 import { chatGpt } from '../util/chatGpt'
 import { sendEmbed } from '../util/embed'
 import DotEnv from 'dotenv'
+import {
+  getCompletionMessages,
+  isChatGpt,
+  pushToCompletions,
+  setChatGpt,
+} from '../store'
 
 DotEnv.config()
 
@@ -22,13 +27,42 @@ export default {
     ),
   async execute(
     interaction: ChatInputCommandInteraction<CacheType>
-  ): Promise<
-    { threadId: string; messages: ChatCompletionRequestMessage[] } | undefined
-  > {
-    if (interaction.channel?.isThread()) return undefined
+  ): Promise<void> {
+    if (interaction.channel?.isThread()) return
+    if (!isChatGpt()) {
+      if (
+        interaction.user.id !== process.env.ADMIN_ID ||
+        (interaction.user.id === process.env.ADMIN_ID &&
+          interaction.options.getString('message') !== 'start')
+      ) {
+        await interaction.reply({
+          content: 'ChatGPT機能は現在停止中です',
+          ephemeral: true,
+        })
+      } else {
+        if (interaction.options.getString('message') === 'start') {
+          setChatGpt(true)
+          await interaction.reply({
+            content: 'ChatGPT機能を再開しました',
+          })
+        }
+      }
+      return
+    } else {
+      if (
+        interaction.user.id === process.env.ADMIN_ID &&
+        interaction.options.getString('message') === 'stop'
+      ) {
+        setChatGpt(false)
+        await interaction.reply({
+          content: 'ChatGPT機能を停止しました',
+        })
+        return
+      }
+    }
 
     const message = interaction.options.getString('message')
-    if (!message) return undefined
+    if (!message) return
 
     // send embed
     await sendEmbed({ interaction, message })
@@ -42,32 +76,27 @@ export default {
       rateLimitPerUser: 1,
     })
 
+    // set store
+    pushToCompletions({
+      channelId: thread.id,
+      messages: { role: 'user', content: `${message}` },
+    })
+
     await thread.sendTyping()
 
     const completionResponse = await chatGpt({
-      messages: [
-        {
-          role: 'user',
-          content: `${message}`,
-        },
-      ],
+      messages: getCompletionMessages({ channelId: thread.id }),
     })
 
-    if (!completionResponse) return undefined
+    if (!completionResponse) return
+    pushToCompletions({
+      channelId: thread.id,
+      messages: completionResponse,
+    })
+
     // send completion response
     await thread.send({
       content: `${completionResponse.content}`,
     })
-
-    return {
-      threadId: thread.id,
-      messages: [
-        {
-          role: 'user',
-          content: `${message}`,
-        },
-        completionResponse,
-      ],
-    }
   },
 }

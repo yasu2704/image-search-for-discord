@@ -9,8 +9,12 @@ import {
 } from 'discord.js'
 import ImageSearch from './commands/imageSearch'
 import Gpt from './commands/gpt'
-import { ChatCompletionRequestMessage } from 'openai'
 import { chatGpt } from './util/chatGpt'
+import {
+  getCompletionMessages,
+  hasCompletion,
+  pushToCompletions,
+} from './store'
 
 DotEnv.config()
 
@@ -34,8 +38,6 @@ client.commands = new Collection()
 client.commands.set(ImageSearch.data.name, ImageSearch)
 client.commands.set(Gpt.data.name, Gpt)
 
-const chatGptCompletions = new Map<string, ChatCompletionRequestMessage[]>()
-
 client.once('ready', () => {
   const bot_invite_url = `https://discord.com/api/oauth2/authorize?client_id=${process.env.CLIENT_ID}&permissions=328565073920&scope=bot`
   console.log(`Invite URL: ${bot_invite_url}`)
@@ -50,22 +52,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
   if (!command) return
 
   try {
-    switch (command.data.name) {
-      case 'gpt': {
-        const data = await Gpt.execute(
-          interaction as ChatInputCommandInteraction<CacheType>
-        )
-        if (data) {
-          chatGptCompletions.set(data.threadId, data.messages)
-        }
-        break
-      }
-      default:
-        await command.execute(
-          interaction as ChatInputCommandInteraction<CacheType>
-        )
-        break
-    }
+    await command.execute(interaction as ChatInputCommandInteraction<CacheType>)
   } catch (error) {
     console.error(error)
     await interaction.reply({
@@ -78,23 +65,25 @@ client.on(Events.InteractionCreate, async (interaction) => {
 client.on(Events.MessageCreate, async (message) => {
   if (!message.channel.isThread()) return
   if (message.author.bot) return
-  if (!chatGptCompletions.has(message.channelId)) return
-  const completionMessage = chatGptCompletions.get(message.channelId)
-  if (completionMessage) {
-    chatGptCompletions.set(message.channelId, [
-      ...completionMessage,
-      { role: 'user', content: message.content },
-    ])
-    const requestMessages = chatGptCompletions.get(message.channelId)
-    await message.channel.sendTyping()
-    const response = await chatGpt({ messages: requestMessages ?? [] })
-    if (response) {
-      message.channel.send(`${response?.content}`)
-      chatGptCompletions.set(message.channelId, [
-        ...(requestMessages ?? []),
-        response,
-      ])
-    }
+  if (!hasCompletion({ channelId: message.channelId })) return
+
+  pushToCompletions({
+    channelId: message.channelId,
+    messages: { role: 'user', content: message.content },
+  })
+
+  await message.channel.sendTyping()
+  const completionResponse = await chatGpt({
+    messages: getCompletionMessages({ channelId: message.channelId }),
+  })
+  if (completionResponse) {
+    pushToCompletions({
+      channelId: message.channelId,
+      messages: completionResponse,
+    })
+    await message.channel.send({
+      content: `${completionResponse.content}`,
+    })
   }
 })
 
